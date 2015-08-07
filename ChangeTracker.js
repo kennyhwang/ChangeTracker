@@ -23,17 +23,28 @@ function ChangeTracker(props) {
         defaulCheckBoxGetFnc: function(ele) {
             return $(ele).prop('checked');
         },
+        defaultCheckBoxSetFnc: function(ele,val) {
+            $(ele).prop('checked',val);
+        },
         defaulRadioGetFnc: function(ele) {
             return $(ele).prop('checked');
+        },
+        defaultRadioSetFnc: function(ele,val) {
+            $(ele).prop('checked',val);
         },
         defaulSelectGetFnc: function(ele) {
             return $(ele).val();
         },
+        defaultSelectSetFnc: function(ele,val) {
+            $(ele).val(val);
+        },
         defaulInputFieldGetFnc: function(ele) {
             return $(ele).val();
-        },   
-        custom: null,
-        donotselect: ""
+        },
+        defaultInputFieldSetFnc: function(ele,val) {
+            $(ele).val(val);
+        },
+        custom: null
     }, props);
 
     // Set props
@@ -69,13 +80,19 @@ function ChangeTracker(props) {
                 for (i in props.custom) {
                     arr.push("." + props.custom["customClass"]);
                 };
-                notselectorstring = arr.join(",");
+                notselectorstring = arr.join(","); // Join all custom classes
             } else {
                 notselectorstring = "." + props.custom["customClass"]; // Individual
             }
         }
         return notselectorstring;
     })();
+    this.selectorGroups = {
+        checkboxes: 'input:checkbox:not(' + this.donotselect + ')',
+        radio: 'input:radio:not(' + this.donotselect + ')',
+        select: 'select:not(' + this.donotselect + ')',
+        inputs: 'input:not([type="radio"], [type="checkbox"], ' + this.donotselect + ')'
+    }
 
     // forEach function
     this.forEach = function(selector,cb) {
@@ -125,9 +142,10 @@ ChangeTracker.prototype.init = function() {
     //    changeIdCounter++;
     //});
 
-    this.forEach(selector + ' input:checkbox:not("' + this.donotselect + '")', function(ele) {
+    this.forEach(selector + ' ', function(ele) {
         $(ele).attr('changeId', changeIdCounter);
         checkboxes[changeIdCounter] = $(ele).prop('checked');
+        type[changeIdCounter] = type;
         changeIdCounter++;
     });
 
