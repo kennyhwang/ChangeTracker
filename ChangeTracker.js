@@ -15,7 +15,7 @@ function ChangeTracker(props) {
     var props = defaultHandler({
         doNotTrackClass: "do-not-track",
         defaultElementValueFnc: function(ele) {
-                return $(ele).val();
+            return $(ele).val();
         },
         customDefaultTrackClass:  "custom-track",
         custom: null
@@ -25,30 +25,30 @@ function ChangeTracker(props) {
     this.doNotTrackClass = props.doNotTrackClass;
     this.trackClass = props.trackClass;
     this.custom = (function() {
-            if (!props.custom) {
-                    if (props.custom.constructor === Array) {
-                            return props.custom;
-                    } else {
-                            return [{
-                                    customTrackingClass: props.customDefaultTrackClass,
-                                    customElementValueFnc: props.custom.constructor
-                            }];
-                    }
+        if (!props.custom) {
+            if (props.custom.constructor === Array) {
+                return props.custom;
             } else {
-                    return [{
-                            customDefaultTrackClass:  "custom-track",
-                            customElementValueFnc: props.defaultElementValueFnc
-                    }];
-            };
+                return [{
+                    customTrackingClass: props.customDefaultTrackClass,
+                    customElementValueFnc: props.custom.constructor
+                }];
+            }
+        } else {
+            return [{
+                customDefaultTrackClass:  "custom-track",
+                customElementValueFnc: props.defaultElementValueFnc
+            }];
+        };
     }
     })();
 
-    this.list;
+this.list;
 
-    this.get = function () {
-        //console.log("get");
-        return this.list
-    };
+this.get = function () {
+    //console.log("get");
+    return this.list
+};
 }
 
 ChangeTracker.prototype.checkchanges = function () {
