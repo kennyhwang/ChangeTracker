@@ -14,22 +14,33 @@ function ChangeTracker(props) {
     // Defaults
     var props = defaultHandler({
         doNotTrackClass: "do-not-track",
-        customTracking: null,
-        customTrackFnc: null
+        defaultElementValueFnc: function(ele) {
+                return $(ele).val();
+        },
+        customDefaultTrackClass:  "custom-track",
+        custom: null
     }, props);
 
+    // Set props
     this.doNotTrackClass = props.doNotTrackClass;
     this.trackClass = props.trackClass;
-    this.customTracking = props.customTracking;
-    this.customTracking = (function() {
-            var default = {
-                    customTracking: [{
+    this.custom = (function() {
+            if (!props.custom) {
+                    if (props.custom.constructor === Array) {
+                            return props.custom;
+                    } else {
+                            return [{
+                                    customTrackingClass: props.customDefaultTrackClass,
+                                    customElementValueFnc: props.custom.constructor
+                            }];
+                    }
+            } else {
+                    return [{
                             customDefaultTrackClass:  "custom-track",
-                            customTrackFunction: function (item1,item2) {
-                                    if (item1 == item2) { return true; }
-                                    return false;
-                            }}]
+                            customElementValueFnc: props.defaultElementValueFnc
+                    }];
             };
+    }
     })();
 
     this.list;
@@ -54,7 +65,3 @@ ChangeTracker.prototype.checkchanges = function () {
 
     return false;
 };
-
-
-//if (customCheck.constructor === Array) {
-//}
