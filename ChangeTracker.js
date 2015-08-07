@@ -142,7 +142,7 @@ ChangeTracker.prototype.resetData = function (selector) {
     $(selector + ' input:checkbox, ' + selector + ' input:radio').each(function() {
         changeIdCounter = $(this).attr('changeId');
         if ( changeIdCounter ) {
-            $(this).prop('checked') = checkboxes[changeIdCounter];
+            $(this).prop('checked', checkboxes[changeIdCounter]);
         }
     });
     $(selector + ' select').each(function() {
