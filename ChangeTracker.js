@@ -14,13 +14,23 @@ function ChangeTracker(props) {
     // Defaults
     var props = defaultHandler({
         doNotTrackClass: "do-not-track",
-        trackClass:  "do-track",
-        customTracking: null
+        customTracking: null,
+        customTrackFnc: null
     }, props);
 
     this.doNotTrackClass = props.doNotTrackClass;
     this.trackClass = props.trackClass;
     this.customTracking = props.customTracking;
+    this.customTracking = (function() {
+            var default = {
+                    customTracking: [{
+                            customDefaultTrackClass:  "custom-track",
+                            customTrackFunction: function (item1,item2) {
+                                    if (item1 == item2) { return true; }
+                                    return false;
+                            }}]
+            };
+    })();
 
     this.list;
 
@@ -45,11 +55,6 @@ ChangeTracker.prototype.checkchanges = function () {
     return false;
 };
 
-function customCheck (item1,item2) {
-    if (item1 == item2) { return true; }
-    
-    return false;
-}
 
 //if (customCheck.constructor === Array) {
 //}
