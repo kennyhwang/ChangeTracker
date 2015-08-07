@@ -14,39 +14,77 @@ function ChangeTracker(props) {
     // Defaults
     var props = defaultHandler({
         doNotTrackClass: "do-not-track",
-        defaultElementValueFnc: function(ele) {
+        defaultElementGetFnc: function(ele) {
             return $(ele).val();
         },
-        customDefaultTrackClass:  "custom-track",
-        custom: null
+        defaultElementSetFnc: function(ele,val) {
+            $(ele).val(val);
+        },
+        defaulCheckBoxGetFnc: function(ele) {
+            return $(ele).prop('checked');
+        },
+        defaulRadioGetFnc: function(ele) {
+            return $(ele).prop('checked');
+        },
+        defaulSelectGetFnc: function(ele) {
+            return $(ele).val();
+        },
+        defaulInputFieldGetFnc: function(ele) {
+            return $(ele).val();
+        },   
+        custom: null,
+        donotselect: ""
     }, props);
 
     // Set props
     this.doNotTrackClass = props.doNotTrackClass;
-    this.trackClass = props.trackClass;
     this.custom = (function() {
-        if (!props.custom) {
+        if (props.custom) {
             if (props.custom.constructor === Array) {
+                props.custom.each(function (i, o) {
+                    o["customElementGetFnc"] = o["customElementGetFnc"] || props.defaultElementGetFnc;
+                    o["customElementSetFnc"] = o["customElementSetFnc"] || props.defaultElementSetFnc;
+                });
                 return props.custom;
             } else {
-                return [{
-                    customTrackingClass: props.customDefaultTrackClass,
-                    customElementValueFnc: props.custom.constructor
-                }];
+                props.custom["customElementGetFnc"] = props.custom["customElementGetFnc"] || props.defaultElementGetFnc;
+                props.custom["customElementSetFnc"] = props.custom["customElementSetFnc"] || props.defaultElementSetFnc;
+                return [props.custom]; // Individual
             }
         } else {
             return [{
-                customDefaultTrackClass:  "custom-track",
-                customElementValueFnc: props.defaultElementValueFnc
+                customClass: "example-custom-track",
+                customElementGetFnc: props.defaultElementGetFnc,
+                customElementSetFnc: props.defaultElementSetFnc,
+
             }];
         };
-    }
+    })();
+    this.donotselect = (function() {
+        var notselectorstring = "." + this.doNotTrackClass; // Start with do-not-track class
+        if (props.custom) {
+            if (props.custom.constructor === Array) {
+                var i;
+                var arr = [];
+                for (i in props.custom) {
+                    arr.push("." + props.custom["customClass"]);
+                };
+                notselectorstring = arr.join(",");
+            } else {
+                notselectorstring = "." + props.custom["customClass"]; // Individual
+            }
+        }
+        return notselectorstring;
     })();
 
-    this.get = function () {
-        //console.log("get");
-        return this.list
-    };
+    // forEach function
+    this.forEach = function(selector,cb) {
+        var results = [];
+        $(selector).each(function() {
+            results.push(cb(this));
+        });
+        return results;
+    }
 
     this.checkboxes = new Array();
     this.selects = new Array();
@@ -56,9 +94,7 @@ function ChangeTracker(props) {
         //console.log("get");
         return this.list
     };
-
 }
-
 
 ChangeTracker.prototype.init = function() {
 
@@ -73,19 +109,25 @@ ChangeTracker.prototype.init = function() {
     //$(selector + " * ").removeAttr('changeId');
 
     // add a changeId attr on each item
-    $(selector + ' input:checkbox, ' + selector + ' input:radio').each(function() {
-        $(this).attr('changeId', changeIdCounter);
-        checkboxes[changeIdCounter] = $(this).prop('checked');
-        changeIdCounter++;
-    });
-    $(selector + ' select').each(function() {
-        $(this).attr('changeId', changeIdCounter);
-        selects[changeIdCounter] = $(this).val(); // note: this works with multiple selects
-        changeIdCounter++;
-    });
-    $(selector + ' input:not([type="radio"], [type="checkbox"])').each(function() {
-        $(this).attr('changeId', changeIdCounter);
-        inputs[changeIdCounter] = $(this).val();
+    //$(selector + ' input:checkbox, ' + selector + ' input:radio').each(function() {
+    //    $(this).attr('changeId', changeIdCounter);
+    //    checkboxes[changeIdCounter] = $(this).prop('checked');
+    //    changeIdCounter++;
+    //});
+    //$(selector + ' select').each(function() {
+    //    $(this).attr('changeId', changeIdCounter);
+    //    selects[changeIdCounter] = $(this).val(); // note: this works with multiple selects
+    //    changeIdCounter++;
+    //});
+    //$(selector + ' input:not([type="radio"], [type="checkbox"])').each(function() {
+    //    $(this).attr('changeId', changeIdCounter);
+    //    inputs[changeIdCounter] = $(this).val();
+    //    changeIdCounter++;
+    //});
+
+    this.forEach(selector + ' input:checkbox:not("' + this.donotselect + '")', function(ele) {
+        $(ele).attr('changeId', changeIdCounter);
+        checkboxes[changeIdCounter] = $(ele).prop('checked');
         changeIdCounter++;
     });
 
@@ -94,6 +136,7 @@ ChangeTracker.prototype.init = function() {
     this.inputs = inputs;
 
 }
+
 ChangeTracker.prototype.checkChanges = function (selector) {
     // check if each item is same as in DOM
 
@@ -129,6 +172,7 @@ ChangeTracker.prototype.checkChanges = function (selector) {
     return hasChanged;
 
 };
+
 ChangeTracker.prototype.resetData = function (selector) {
 
     if ( typeof(selector) == "undefined" ) {
