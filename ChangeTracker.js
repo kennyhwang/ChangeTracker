@@ -14,34 +14,34 @@ function ChangeTracker(props) {
     // Defaults
     var props = defaultHandler({
         doNotTrackClass: "do-not-track",
-        defaultElementGetFnc: function(ele) {
+        defaultElementGetFnc: function (ele) {
             return $(ele).val();
         },
-        defaultElementSetFnc: function(ele,val) {
+        defaultElementSetFnc: function (ele, val) {
             $(ele).val(val);
         },
-        defaulCheckBoxGetFnc: function(ele) {
+        defaultCheckBoxGetFnc: function (ele) {
             return $(ele).prop('checked');
         },
-        defaultCheckBoxSetFnc: function(ele,val) {
-            $(ele).prop('checked',val);
+        defaultCheckBoxSetFnc: function (ele, val) {
+            $(ele).prop('checked', val);
         },
-        defaulRadioGetFnc: function(ele) {
+        defaultRadioGetFnc: function (ele) {
             return $(ele).prop('checked');
         },
-        defaultRadioSetFnc: function(ele,val) {
-            $(ele).prop('checked',val);
+        defaultRadioSetFnc: function (ele, val) {
+            $(ele).prop('checked', val);
         },
-        defaulSelectGetFnc: function(ele) {
+        defaultSelectGetFnc: function (ele) {
             return $(ele).val();
         },
-        defaultSelectSetFnc: function(ele,val) {
+        defaultSelectSetFnc: function (ele, val) {
             $(ele).val(val);
         },
-        defaulInputFieldGetFnc: function(ele) {
+        defaultInputFieldGetFnc: function (ele) {
             return $(ele).val();
         },
-        defaultInputFieldSetFnc: function(ele,val) {
+        defaultInputFieldSetFnc: function (ele, val) {
             $(ele).val(val);
         },
         custom: null
@@ -49,78 +49,106 @@ function ChangeTracker(props) {
 
     // Set props
     this.doNotTrackClass = props.doNotTrackClass;
-    this.custom = (function() {
+    this.custom = (function () {
         if (props.custom) {
             if (props.custom.constructor === Array) {
                 props.custom.each(function (i, o) {
-                    o["customElementGetFnc"] = o["customElementGetFnc"] || props.defaultElementGetFnc;
-                    o["customElementSetFnc"] = o["customElementSetFnc"] || props.defaultElementSetFnc;
+                    o["get"] = o["get"] || props.defaultElementGetFnc;
+                    o["set"] = o["set"] || props.defaultElementSetFnc;
                 });
                 return props.custom;
             } else {
-                props.custom["customElementGetFnc"] = props.custom["customElementGetFnc"] || props.defaultElementGetFnc;
-                props.custom["customElementSetFnc"] = props.custom["customElementSetFnc"] || props.defaultElementSetFnc;
+                props.custom["get"] = props.custom["get"] || props.defaultElementGetFnc;
+                props.custom["set"] = props.custom["set"] || props.defaultElementSetFnc;
                 return [props.custom]; // Individual
             }
-        } else {
-            return [{
-                customClass: "example-custom-track",
-                customElementGetFnc: props.defaultElementGetFnc,
-                customElementSetFnc: props.defaultElementSetFnc,
+        }
+        //else {
+        //    return [{
+        //        selector: "example-custom-track",
+        //        get: props.defaultElementGetFnc,
+        //        set: props.defaultElementSetFnc,
 
-            }];
-        };
+        //    }];
+        //};
     })();
-    this.donotselect = (function() {
+    this.donotselect = (function () {
         var notselectorstring = "." + this.doNotTrackClass; // Start with do-not-track class
         if (props.custom) {
             if (props.custom.constructor === Array) {
                 var i;
                 var arr = [];
                 for (i in props.custom) {
-                    arr.push("." + props.custom["customClass"]);
+                    arr.push(props.custom["selector"]);
                 };
-                notselectorstring = arr.join(","); // Join all custom classes
+                notselectorstring += "," + arr.join(","); // Join all custom classes
             } else {
-                notselectorstring = "." + props.custom["customClass"]; // Individual
+                notselectorstring += "," + props.custom["selector"]; // Individual
             }
         }
         return notselectorstring;
-    })();
-    this.selectorGroups = {
-        checkboxes: 'input:checkbox:not(' + this.donotselect + ')',
-        radio: 'input:radio:not(' + this.donotselect + ')',
-        select: 'select:not(' + this.donotselect + ')',
-        inputs: 'input:not([type="radio"], [type="checkbox"], ' + this.donotselect + ')'
-    }
+    }).call(this);
+    this.selectorGroups = (function () {
+        var groups = [
+            {
+                selector: 'input:checkbox:not(' + this.donotselect + ')',
+                get: props.defaultCheckBoxGetFnc,
+                set: props.defaultCheckBoxSetFnc
+            },
+            {
+                selector: 'input:radio:not(' + this.donotselect + ')',
+                get: props.defaultRadioGetFnc,
+                set: props.defaultRadioSetFnc
+            },
+            {
+                selector: 'select:not(' + this.donotselect + ')',
+                get: props.defaultSelectGetFnc,
+                set: props.defaultSelectSetFnc
+            },
+            {
+                selector: 'input:not([type="radio"], [type="checkbox"], ' + this.donotselect + ')',
+                get: props.defaultInputFieldGetFnc,
+                set: props.defaultInputFieldSetFnc
+            }
+        ];
+
+        $(this.custom).each(function (i, o) {
+            groups.push(o);
+        });
+
+        return groups;
+    }).call(this);
 
     // forEach function
-    this.forEach = function(selector,cb) {
+    this.forEach = function (selector, cb) {
         var results = [];
-        $(selector).each(function() {
+        $(selector).each(function () {
             results.push(cb(this));
         });
         return results;
     }
 
-    this.checkboxes = new Array();
-    this.selects = new Array();
-    this.inputs = new Array();
+    this.chglist = [];
+
+    //this.checkboxes = new Array();
+    //this.selects = new Array();
+    //this.inputs = new Array();
 
     this.get = function () {
-        //console.log("get");
-        return this.list
+        return this.chglist
     };
 }
 
-ChangeTracker.prototype.init = function() {
+ChangeTracker.prototype.init = function () {
 
     var selector = "body";
     var changeIdCounter = 0;
 
-    var checkboxes = new Array();
-    var selects = new Array();
-    var inputs = new Array();
+    var chglist = [];
+
+    //var checkboxes = new Array();
+    //var selects = new Array();
+    //var inputs = new Array();
 
     // reset changeId everywhere
     //$(selector + " * ").removeAttr('changeId');
@@ -142,50 +170,79 @@ ChangeTracker.prototype.init = function() {
     //    changeIdCounter++;
     //});
 
-    this.forEach(selector + ' ', function(ele) {
-        $(ele).attr('changeId', changeIdCounter);
-        checkboxes[changeIdCounter] = $(ele).prop('checked');
-        type[changeIdCounter] = type;
-        changeIdCounter++;
+    //this.forEach(selector + ' ', function(ele) {
+    //    $(ele).attr('changeId', changeIdCounter);
+    //    checkboxes[changeIdCounter] = $(ele).prop('checked');
+    //    type[changeIdCounter] = type;
+    //    changeIdCounter++;
+    //});
+
+    //this.checkboxes = checkboxes;
+    //this.selects = selects;
+    //this.inputs = inputs;
+
+    // Set values for all selector groups
+    var chgtrk = this; // Save context
+    $(this.selectorGroups).each(function (i, o) { // For each selector group
+        chgtrk.forEach(selector + ' ' + o.selector, function (ele) { // Execute a forEach function
+            $(ele).attr('changeid', changeIdCounter); // Add counter
+            chglist.push({
+                selector: o.selector, // re-use selector as identifier
+                chgid: changeIdCounter, // Set chgid to counter
+                val: o.get(ele) // Use getter
+            }); // Push to change list
+            changeIdCounter++; // Increment
+        });
     });
 
-    this.checkboxes = checkboxes;
-    this.selects = selects;
-    this.inputs = inputs;
-
+    this.chglist = chglist; // Save values
 }
 
 ChangeTracker.prototype.checkChanges = function (selector) {
     // check if each item is same as in DOM
 
     var hasChanged = false;
-    var changeIdCounter = 0;
-    if ( typeof(selector) == "undefined" ) {
+    //var changeIdCounter = 0;
+    if (typeof (selector) == "undefined") {
         var selector = "body";
     }
 
-    var checkboxes = this.checkboxes ; 
-    var selects = this.selects ; 
-    var inputs = this.inputs ; 
+    var chgtrk = this; // Save context
+    $(this.selectorGroups).each(function (i, o) { // For each selector group
+        chgtrk.forEach(selector + ' ' + o.selector, function (ele) { // Execute a forEach function
+            for (var i = 0; i < chgtrk.chglist.length; i++) { // Loop through change list
+                if (chgtrk.chglist[i].chgid === parseInt($(ele).attr('changeid'))) { // if chgid matches
+                    if (chgtrk.chglist[i].val !== o.get(ele)) { // if values are different
+                        hasChanged = true; // Change found
+                        break;
+                    };
+                }
+            }
+        });
+    });
 
-    $(selector + ' input:checkbox, ' + selector + ' input:radio').each(function() {
-        changeIdCounter = $(this).attr('changeId');
-        if ( checkboxes[changeIdCounter] != $(this).prop('checked') ) {
-            hasChanged = true ; 
-        }
-    });
-    $(selector + ' select').each(function() {
-        changeIdCounter = $(this).attr('changeId');
-        if ( selects[changeIdCounter] != $(this).val() ) {
-            hasChanged = true ; 
-        }
-    });
-    $(selector + ' input:not([type="radio"], [type="checkbox"])').each(function() {
-        changeIdCounter = $(this).attr('changeId');
-        if ( selects[changeIdCounter] != $(this).val() ) {
-            hasChanged = true ; 
-        }
-    });
+    //var checkboxes = this.checkboxes;
+    //var selects = this.selects;
+    //var inputs = this.inputs;
+
+    //$(selector + ' input:checkbox, ' + selector + ' input:radio').each(function () {
+    //    changeIdCounter = $(this).attr('changeId');
+    //    if (checkboxes[changeIdCounter] != $(this).prop('checked')) {
+    //        hasChanged = true;
+    //    }
+    //});
+    //$(selector + ' select').each(function () {
+    //    changeIdCounter = $(this).attr('changeId');
+    //    if (selects[changeIdCounter] != $(this).val()) {
+    //        hasChanged = true;
+    //    }
+    //});
+    //$(selector + ' input:not([type="radio"], [type="checkbox"])').each(function () {
+    //    changeIdCounter = $(this).attr('changeId');
+    //    if (selects[changeIdCounter] != $(this).val()) {
+    //        hasChanged = true;
+    //    }
+    //});
 
     return hasChanged;
 
@@ -193,32 +250,45 @@ ChangeTracker.prototype.checkChanges = function (selector) {
 
 ChangeTracker.prototype.resetData = function (selector) {
 
-    if ( typeof(selector) == "undefined" ) {
+    if (typeof (selector) == "undefined") {
         var selector = "body";
     }
 
-    var checkboxes = this.checkboxes ; 
-    var selects = this.selects ; 
-    var inputs = this.inputs ; 
+    var chgtrk = this; // Save context
+    $(this.selectorGroups).each(function (i, o) { // For each selector group
+        chgtrk.forEach(selector + ' ' + o.selector, function (ele) { // Execute a forEach function
+            for (var i = 0; i < chgtrk.chglist.length; i++) { // Loop through change list
+                if (chgtrk.chglist[i].chgid === parseInt($(ele).attr('changeid'))) { // if chgid matches
+                    o.set(ele,chgtrk.chglist[i].val); // Use set function to set original value
+                }
+            }
+        });
+    })
 
-    $(selector + ' input:checkbox, ' + selector + ' input:radio').each(function() {
-        changeIdCounter = $(this).attr('changeId');
-        if ( changeIdCounter ) {
-            $(this).prop('checked', checkboxes[changeIdCounter]);
-        }
-    });
-    $(selector + ' select').each(function() {
-        changeIdCounter = $(this).attr('changeId');
-        if ( changeIdCounter ) {
-            $(this).val(selects[changeIdCounter]);
-        }
-    });
-    $(selector + ' input:not([type="radio"], [type="checkbox"])').each(function() {
-        changeIdCounter = $(this).attr('changeId');
-        if ( changeIdCounter ) {
-            $(this).val(inputs[changeIdCounter]);
-        }
-    });
+    //var checkboxes = this.checkboxes;
+    //var selects = this.selects;
+    //var inputs = this.inputs;
+
+    //$(selector + ' input:checkbox, ' + selector + ' input:radio').each(function () {
+    //    changeIdCounter = $(this).attr('changeId');
+    //    if (changeIdCounter) {
+    //        $(this).prop('checked', checkboxes[changeIdCounter]);
+    //    }
+    //});
+    //$(selector + ' select').each(function () {
+    //    changeIdCounter = $(this).attr('changeId');
+    //    if (changeIdCounter) {
+    //        $(this).val(selects[changeIdCounter]);
+    //    }
+    //});
+    //$(selector + ' input:not([type="radio"], [type="checkbox"])').each(function () {
+    //    changeIdCounter = $(this).attr('changeId');
+    //    if (changeIdCounter) {
+    //        $(this).val(inputs[changeIdCounter]);
+    //    }
+    //});
 }
 
 // todo: add, delete
+
+
