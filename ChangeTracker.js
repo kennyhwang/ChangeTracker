@@ -44,6 +44,12 @@ function ChangeTracker(props) {
         defaultInputFieldSetFnc: function (ele, val) {
             $(ele).val(val);
         },
+        defaultTextAreaGetFnc: function (ele) {
+            return $(ele).val().trim();
+        },
+        defaultTextAreaSetFnc: function (ele, val) {
+            $(ele).val(val).trim();
+        },
         custom: null
     }, props);
 
@@ -109,6 +115,11 @@ function ChangeTracker(props) {
                 selector: 'input:not([type="radio"], [type="checkbox"], ' + this.donotselect + ')',
                 get: props.defaultInputFieldGetFnc,
                 set: props.defaultInputFieldSetFnc
+            },
+            {
+                selector: 'textarea:not(' + this.donotselect + ')',
+                get: props.defaultTextAreaGetFnc,
+                set: props.defaultTextAreaSetFnc
             }
         ];
 
@@ -139,9 +150,9 @@ function ChangeTracker(props) {
     };
 }
 
-ChangeTracker.prototype.init = function () {
+ChangeTracker.prototype.init = function (selector) {
 
-    var selector = "body";
+    var selector = selector || "body";
     var changeIdCounter = 0;
 
     var chglist = [];
