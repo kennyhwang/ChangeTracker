@@ -13,6 +13,7 @@ function ChangeTracker(props) {
 
     // Defaults
     var props = defaultHandler({
+        changeIdAttr: "changeid",
         doNotTrackClass: "do-not-track",
         defaultElementGetFnc: function (ele) {
             return $(ele).val();
@@ -54,11 +55,12 @@ function ChangeTracker(props) {
     }, props);
 
     // Set props
+    this.changeIdAttr = props.changeIdAttr;
     this.doNotTrackClass = props.doNotTrackClass;
     this.custom = (function () {
         if (props.custom) {
             if (props.custom.constructor === Array) {
-                props.custom.each(function (i, o) {
+                $(props.custom).each(function (i, o) {
                     o["get"] = o["get"] || props.defaultElementGetFnc;
                     o["set"] = o["set"] || props.defaultElementSetFnc;
                 });
@@ -85,7 +87,7 @@ function ChangeTracker(props) {
                 var i;
                 var arr = [];
                 for (i in props.custom) {
-                    arr.push(props.custom["selector"]);
+                    arr.push(props.custom[i]["selector"]);
                 };
                 notselectorstring += "," + arr.join(","); // Join all custom classes
             } else {
@@ -196,7 +198,7 @@ ChangeTracker.prototype.init = function (selector) {
     var chgtrk = this; // Save context
     $(this.selectorGroups).each(function (i, o) { // For each selector group
         chgtrk.forEach(selector + ' ' + o.selector, function (ele) { // Execute a forEach function
-            $(ele).attr('changeid', changeIdCounter); // Add counter
+            $(ele).attr(chgtrk.changeIdAttr, changeIdCounter); // Add counter
             chglist.push({
                 selector: o.selector, // re-use selector as identifier
                 chgid: changeIdCounter, // Set chgid to counter
@@ -222,7 +224,7 @@ ChangeTracker.prototype.checkChanges = function (selector) {
     $(this.selectorGroups).each(function (i, o) { // For each selector group
         chgtrk.forEach(selector + ' ' + o.selector, function (ele) { // Execute a forEach function
             for (var i = 0; i < chgtrk.chglist.length; i++) { // Loop through change list
-                if (chgtrk.chglist[i].chgid === parseInt($(ele).attr('changeid'))) { // if chgid matches
+                if (chgtrk.chglist[i].chgid === parseInt($(ele).attr(chgtrk.changeIdAttr))) { // if chgid matches
                     if (chgtrk.chglist[i].val !== o.get(ele)) { // if values are different
                         hasChanged = true; // Change found
                         break;
@@ -269,7 +271,7 @@ ChangeTracker.prototype.resetData = function (selector) {
     $(this.selectorGroups).each(function (i, o) { // For each selector group
         chgtrk.forEach(selector + ' ' + o.selector, function (ele) { // Execute a forEach function
             for (var i = 0; i < chgtrk.chglist.length; i++) { // Loop through change list
-                if (chgtrk.chglist[i].chgid === parseInt($(ele).attr('changeid'))) { // if chgid matches
+                if (chgtrk.chglist[i].chgid === parseInt($(ele).attr(chgtrk.changeIdAttr))) { // if chgid matches
                     o.set(ele,chgtrk.chglist[i].val); // Use set function to set original value
                 }
             }
