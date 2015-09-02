@@ -261,6 +261,32 @@ ChangeTracker.prototype.checkChanges = function (selector) {
 
 };
 
+ChangeTracker.prototype.whatChanged = function(selector) {
+
+    var changed = [];
+
+    if (typeof (selector) == "undefined") {
+        var selector = "body";
+    }
+
+    var chgtrk = this; // Save context
+    $(this.selectorGroups).each(function (i, o) { // For each selector group
+        chgtrk.forEach(selector + ' ' + o.selector, function (ele) { // Execute a forEach function
+            for (var i = 0; i < chgtrk.chglist.length; i++) { // Loop through change list
+                if (chgtrk.chglist[i].chgid === parseInt($(ele).attr(chgtrk.changeIdAttr))) { // if chgid matches
+                    if (chgtrk.chglist[i].val !== o.get(ele)) { // if values are different
+                        var change = jQuery.extend(true, {}, chgtrk.chglist[i]);
+                        change.newval =  o.get(ele);
+                        changed.push(change);
+                    };
+                }
+            }
+        });
+    });
+
+    return changed;
+}
+
 ChangeTracker.prototype.resetData = function (selector) {
 
     if (typeof (selector) == "undefined") {
