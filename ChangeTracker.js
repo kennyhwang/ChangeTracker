@@ -51,6 +51,9 @@ function ChangeTracker(props) {
         defaultTextAreaSetFnc: function (ele, val) {
             $(ele).val(val).trim();
         },
+        defaultEqualsFnc: function (ele1, ele2) {
+            return ele1 === ele2;
+        },
         custom: null
     }, props);
 
@@ -63,11 +66,13 @@ function ChangeTracker(props) {
                 $(props.custom).each(function (i, o) {
                     o["get"] = o["get"] || props.defaultElementGetFnc;
                     o["set"] = o["set"] || props.defaultElementSetFnc;
+                    o["eq"] = o["eq"] || props.defaultEqualsFnc;
                 });
                 return props.custom;
             } else {
                 props.custom["get"] = props.custom["get"] || props.defaultElementGetFnc;
                 props.custom["set"] = props.custom["set"] || props.defaultElementSetFnc;
+                props.custom["eq"] = props.custom["eq"] || props.defaultEqualsFnc;
                 return [props.custom]; // Individual
             }
         }
@@ -101,27 +106,32 @@ function ChangeTracker(props) {
             {
                 selector: 'input:checkbox:not(' + this.donotselect + ')',
                 get: props.defaultCheckBoxGetFnc,
-                set: props.defaultCheckBoxSetFnc
+                set: props.defaultCheckBoxSetFnc,
+                eq: props.defaultEqualsFnc
             },
             {
                 selector: 'input:radio:not(' + this.donotselect + ')',
                 get: props.defaultRadioGetFnc,
-                set: props.defaultRadioSetFnc
+                set: props.defaultRadioSetFnc,
+                eq: props.defaultEqualsFnc
             },
             {
                 selector: 'select:not(' + this.donotselect + ')',
                 get: props.defaultSelectGetFnc,
-                set: props.defaultSelectSetFnc
+                set: props.defaultSelectSetFnc,
+                eq: props.defaultEqualsFnc
             },
             {
                 selector: 'input:not([type="radio"], [type="checkbox"], ' + this.donotselect + ')',
                 get: props.defaultInputFieldGetFnc,
-                set: props.defaultInputFieldSetFnc
+                set: props.defaultInputFieldSetFnc,
+                eq: props.defaultEqualsFnc
             },
             {
                 selector: 'textarea:not(' + this.donotselect + ')',
                 get: props.defaultTextAreaGetFnc,
-                set: props.defaultTextAreaSetFnc
+                set: props.defaultTextAreaSetFnc,
+                eq: props.defaultEqualsFnc
             }
         ];
 
@@ -225,7 +235,7 @@ ChangeTracker.prototype.checkChanges = function (selector) {
         chgtrk.forEach(selector + ' ' + o.selector, function (ele) { // Execute a forEach function
             for (var i = 0; i < chgtrk.chglist.length; i++) { // Loop through change list
                 if (chgtrk.chglist[i].chgid === parseInt($(ele).attr(chgtrk.changeIdAttr))) { // if chgid matches
-                    if (chgtrk.chglist[i].val !== o.get(ele)) { // if values are different
+                    if (!o.eq(chgtrk.chglist[i].val,o.get(ele))) { // if values are different
                         hasChanged = true; // Change found
                         break;
                     };
@@ -261,7 +271,7 @@ ChangeTracker.prototype.checkChanges = function (selector) {
 
 };
 
-ChangeTracker.prototype.whatChanged = function(selector) {
+ChangeTracker.prototype.whatChanged = function (selector) {
 
     var changed = [];
 
@@ -274,9 +284,9 @@ ChangeTracker.prototype.whatChanged = function(selector) {
         chgtrk.forEach(selector + ' ' + o.selector, function (ele) { // Execute a forEach function
             for (var i = 0; i < chgtrk.chglist.length; i++) { // Loop through change list
                 if (chgtrk.chglist[i].chgid === parseInt($(ele).attr(chgtrk.changeIdAttr))) { // if chgid matches
-                    if (chgtrk.chglist[i].val !== o.get(ele)) { // if values are different
+                    if (!o.eq(chgtrk.chglist[i].val, o.get(ele))) { // if values are different
                         var change = jQuery.extend(true, {}, chgtrk.chglist[i]);
-                        change.newval =  o.get(ele);
+                        change.newval = o.get(ele);
                         changed.push(change);
                     };
                 }
@@ -298,7 +308,7 @@ ChangeTracker.prototype.resetData = function (selector) {
         chgtrk.forEach(selector + ' ' + o.selector, function (ele) { // Execute a forEach function
             for (var i = 0; i < chgtrk.chglist.length; i++) { // Loop through change list
                 if (chgtrk.chglist[i].chgid === parseInt($(ele).attr(chgtrk.changeIdAttr))) { // if chgid matches
-                    o.set(ele,chgtrk.chglist[i].val); // Use set function to set original value
+                    o.set(ele, chgtrk.chglist[i].val); // Use set function to set original value
                 }
             }
         });
